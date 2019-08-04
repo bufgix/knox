@@ -1,0 +1,13 @@
+function Logger(name)
+    logger = {
+        name = name,
+        info = function(msg) print("["..name.."][i] "..msg) end,
+        warn = function(msg) print("["..name.."][*] "..msg) end,
+    }
+    return logger
+end    
+    
+
+
+
+

@@ -1,0 +1,32 @@
+os.loadAPI("knox/utils")
+os.loadAPI("knox/network")
+os.loadAPI("knox/logcl")
+
+logger = logcl.Logger("Main")
+
+function checkFirstRun()
+    if utils.CONFIG.data.DOOR_KEY == "notset" or 
+        utils.CONFIG.data.HOME_TOKEN == "notset" then
+        return true
+    else
+        return false
+    end
+end
+
+function main()
+    if checkFirstRun() then
+        -- First run here
+        print("Enter HOME TOKEN")
+        home_token = read()
+        print("Enter DOOR KEY")
+        door_key = read()
+        utils.CONFIG.data.DOOR_KEY = door_key
+        utils.CONFIG.data.HOME_TOKEN = home_token
+        utils.CONFIG.save()        
+    else
+       -- otherwise
+       network.prepareNetwork()
+       network.listenForever()
+    end
+end
+

@@ -1,0 +1,59 @@
+os.loadAPI("knox/logcl")
+
+logger = logcl.Logger("utils")
+
+
+function getConfig(filename)
+    local conf_file = fs.open(fs.combine("knox", filename), "r")
+    return textutils.unserialise(conf_file.readAll())
+end
+
+function getDriveSide()
+    for i, side in ipairs(rs.getSides()) do
+        if peripheral.getType(side) == "drive" then
+            return side
+        end
+    end
+end
+
+CONFIG = {}
+CONFIG.data = getConfig("settings.conf")
+CONFIG.filename = fs.combine("knox", "settings.conf")
+CONFIG.realname = "settings.conf"
+
+function CONFIG.toString()
+    for i, v in pairs(CONFIG.data) do
+        print(i.." --> "..v)
+    end
+end
+
+function CONFIG.resetHard()
+    local newConf = {
+        DOOR_KEY = "notset",
+        HOME_TOKEN = "notset",
+        NETWORK_GROUP = "home",
+        DEVICE_NAME = "server"
+    }
+    
+    local conf_file = fs.open(CONFIG.filename, "w")
+    conf_file.write(textutils.serialise(newConf))
+    CONFIG.data = getConfig(CONFIG.realname)
+end
+
+function CONFIG.save()
+    local conf_file = fs.open(CONFIG.filename, "w")
+    conf_file.write(textutils.serialise(CONFIG.data))    
+end
+
+function CONFIG.saveToDisk()
+    if disk.isPresent(getDriveSide()) then
+        local conf_file = fs.open(fs.combine(disk.getMountPath(getDriveSide()), CONFIG.realname), "w")
+        conf_file.write(textutils.serialise(CONFIG.data))
+        disk.setLabel(getDriveSide(), "knox_settings")
+        disk.eject(getDriveSide())
+        return true
+    else
+        logger.info("Disk is not loaded")
+        return false
+    end
+end

@@ -1,0 +1,60 @@
+os.loadAPI("knox/utils")
+os.loadAPI("knox/logcl")
+
+logger = logcl.Logger("network")
+config = utils.CONFIG
+
+function getModemSide()
+    for i, side in ipairs(rs.getSides()) do
+        if peripheral.getType(side) == "modem" then
+            return side
+        end
+    end
+end
+
+function auth(door_key, home_token)
+    if door_key == config.data.DOOR_KEY and
+        home_token == config.data.HOME_TOKEN then
+        return true
+    else
+        return false
+    end
+
+end
+
+function listenForever()
+    logger.info("Listening.. ")
+    while true do
+        local senderID, message = rednet.receive()
+        if type(message) == "table" then
+            if message.sType == "lookup" then
+                logger.warn("lookuped server by  "..senderID)
+            else
+                -- Validate possible vars
+                if message.door_key ~= nil and 
+                    message.home_token ~= nil then
+                    local status = auth(message.door_key,
+                         message.home_token)
+                    if status then
+                        logger.info("Access granded")
+                        -- TODO: send status to sender
+                    else
+                        logger.warn("Access denied") 
+                    end 
+                else
+                    logger.warn("Variables are not correct")                   
+                end
+            end
+        else
+            logger.warn("Unsupported Message")
+            rednet.send(senderID, {text = "Unsupported type"})
+        end
+       -- print(senderID.." --> "..message)
+    end
+end
+
+function prepareNetwork()
+    rednet.open(getModemSide())
+    rednet.host(config.data.NETWORK_GROUP, config.data.DEVICE_NAME)
+end
+
